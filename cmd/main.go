@@ -22,6 +22,8 @@ type PlainFormatter struct {
 	TimestampFormat string
 }
 
+var inputLabels []string
+
 func (f *PlainFormatter) Format(entry *log.Entry) ([]byte, error) {
 	timestamp := entry.Time.Format(f.TimestampFormat)
 	return []byte(fmt.Sprintf("%s %s : %s\n", timestamp, entry.Level, entry.Message)), nil
@@ -45,33 +47,62 @@ func Decrypt(iv, ct []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
-	return aesgcm.Open(nil, iv, ct, nil)
+
+	result, err := aesgcm.Open(nil, iv, ct, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func validateInput() {
+
 }
 
 func handleConnection(conn net.Conn) {
 	dec := gob.NewDecoder(conn)
 	msg := Data{}
 	dec.Decode(&msg)
-	fmt.Printf("Received : %+v", msg)
-	iv, err := base64.RawStdEncoding.DecodeString(msg.IV)
-	if err != nil {
-		log.Error(err)
-	}
-	ct, err := base64.RawStdEncoding.DecodeString(msg.Data)
-	if err != nil {
-		log.Error(err)
-	}
-	result, err := Decrypt(iv, ct)
-	if err != nil {
-		log.Error(err)
-	}
-	fmt.Printf("Decrypted : %+v", result)
+	fmt.Printf("Received : %+v\n\n", msg)
 
+	iv, err := base64.StdEncoding.DecodeString(msg.Data)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	ct, err := base64.StdEncoding.DecodeString(msg.IV)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	d, err := Decrypt(iv, ct)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Print("Decrypted value")
+	fmt.Printf("+ %s\n", d)
 	conn.Close()
+
+	sendData(d)
+}
+
+func sendData(data []byte) {
+	fmt.Println("start client")
+	conn, err := net.Dial("tcp", ":80")
+	if err != nil {
+		log.Fatal("Connection error", err)
+	}
+	encoder := gob.NewEncoder(conn)
+	encoder.Encode(data)
+	conn.Close()
+	fmt.Println("sent")
 }
 
 func main() {
@@ -84,8 +115,11 @@ func main() {
 	// log.Info("%s running on %s at port %s with end-point set to %s", module_name, ingress_host, ingress_port, egess_urls)
 	// log.Info("keys to decrypt: %s", input_label)
 
+	//inputLabels = strings.Split(input_label, ",")
+
 	fmt.Println("start the server")
-	ln, err := net.Listen("tcp", ":"+"80")
+	ln, err := net.Listen("tcp", ":80")
+	fmt.Println("started the server: " + ln.Addr().String())
 	if err != nil {
 		log.Error(err)
 	}
