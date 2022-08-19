@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 
+	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,10 +63,6 @@ func Decrypt(iv, ct []byte) ([]byte, error) {
 	return result, nil
 }
 
-func validateInput() {
-
-}
-
 func handleConnection(conn net.Conn) {
 	dec := gob.NewDecoder(conn)
 	msg := Data{}
@@ -90,7 +88,7 @@ func handleConnection(conn net.Conn) {
 	fmt.Printf("+ %s\n", d)
 	conn.Close()
 
-	sendData(d)
+	//sendData(d)
 }
 
 func sendData(data []byte) {
@@ -98,6 +96,7 @@ func sendData(data []byte) {
 	conn, err := net.Dial("tcp", ":80")
 	if err != nil {
 		log.Fatal("Connection error", err)
+		return
 	}
 	encoder := gob.NewEncoder(conn)
 	encoder.Encode(data)
@@ -106,22 +105,23 @@ func sendData(data []byte) {
 }
 
 func main() {
-	// module_name := GetEnvAsserted("MODULE_NAME")
-	// ingress_host := GetEnvAsserted("INGRESS_HOST")
-	// ingress_port := GetEnvAsserted("INGRESS_PORT")
-	// egess_urls := GetEnvAsserted("EGRESS_URLS")
-	// input_label := GetEnvAsserted("INPUT_LABEL")
+	godotenv.Load("docker.env") // TODO: Only use it for testing locally
+	module_name := GetEnvAsserted("MODULE_NAME")
+	ingress_host := GetEnvAsserted("INGRESS_HOST")
+	ingress_port := GetEnvAsserted("INGRESS_PORT")
+	egess_urls := GetEnvAsserted("EGRESS_URLS")
+	input_labels := GetEnvAsserted("INPUT_LABELS")
 
-	// log.Info("%s running on %s at port %s with end-point set to %s", module_name, ingress_host, ingress_port, egess_urls)
-	// log.Info("keys to decrypt: %s", input_label)
+	log.Info("keys to decrypt: %s", input_labels)
+	log.Info("%s running on %s at port %s with end-point set to %s", module_name, ingress_host, ingress_port, egess_urls)
 
-	//inputLabels = strings.Split(input_label, ",")
+	inputLabels = strings.Split(input_labels, ",")
 
 	fmt.Println("start the server")
-	ln, err := net.Listen("tcp", ":80")
+	ln, err := net.Listen("tcp", ingress_host+":"+ingress_port)
 	fmt.Println("started the server: " + ln.Addr().String())
 	if err != nil {
-		log.Error(err)
+		log.Fatal(err)
 	}
 
 	for {
