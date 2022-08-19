@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 
@@ -14,11 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Data struct {
-	Data      string `json:"data"`
-	Timestamp string `json:"timestamp"`
-	IV        string `json:"iv"`
-}
+type Data map[string]interface{}
 
 type PlainFormatter struct {
 	TimestampFormat string
@@ -63,18 +62,18 @@ func Decrypt(iv, ct []byte) ([]byte, error) {
 	return result, nil
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, egressUrl string) {
 	dec := gob.NewDecoder(conn)
 	msg := Data{}
 	dec.Decode(&msg)
 	fmt.Printf("Received : %+v\n\n", msg)
 
-	iv, err := base64.StdEncoding.DecodeString(msg.Data)
+	iv, err := base64.StdEncoding.DecodeString(fmt.Sprint(msg["data"]))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	ct, err := base64.StdEncoding.DecodeString(msg.IV)
+	ct, err := base64.StdEncoding.DecodeString(fmt.Sprint(msg["iv"]))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -88,24 +87,45 @@ func handleConnection(conn net.Conn) {
 	fmt.Printf("+ %s\n", d)
 	conn.Close()
 
-	//sendData(d)
+	sendData(d, egressUrl)
 }
 
-func sendData(data []byte) {
+func sendData(data []byte, egressUrl string) {
 	fmt.Println("start client")
-	conn, err := net.Dial("tcp", ":80")
+	// Create a HTTP post request
+	r, err := http.NewRequest("POST", egressUrl, bytes.NewBuffer(data))
 	if err != nil {
-		log.Fatal("Connection error", err)
+		fmt.Println(err)
 		return
 	}
-	encoder := gob.NewEncoder(conn)
-	encoder.Encode(data)
-	conn.Close()
-	fmt.Println("sent")
+
+	r.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer res.Body.Close()
+
+	post := &Data{}
+	derr := json.NewDecoder(res.Body).Decode(post)
+	if derr != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if res.StatusCode != http.StatusCreated {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("sent status: " + r.Response.Status)
 }
 
 func main() {
-	godotenv.Load("docker.env") // TODO: Only use it for testing locally
+	godotenv.Load("./docker/docker.env") // TODO: Only use it for testing locally
 	module_name := GetEnvAsserted("MODULE_NAME")
 	ingress_host := GetEnvAsserted("INGRESS_HOST")
 	ingress_port := GetEnvAsserted("INGRESS_PORT")
@@ -130,6 +150,6 @@ func main() {
 			log.Error(err)
 			continue
 		}
-		go handleConnection(conn) // a goroutine handles conn so that the loop can accept other connections
+		go handleConnection(conn, egess_urls) // a goroutine handles conn so that the loop can accept other connections
 	}
 }
