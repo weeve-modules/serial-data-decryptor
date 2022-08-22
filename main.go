@@ -23,8 +23,6 @@ type PlainFormatter struct {
 	TimestampFormat string
 }
 
-var inputLabels []string
-
 func (f *PlainFormatter) Format(entry *log.Entry) ([]byte, error) {
 	timestamp := entry.Time.Format(f.TimestampFormat)
 	return []byte(fmt.Sprintf("%s %s : %s\n", timestamp, entry.Level, entry.Message)), nil
@@ -36,6 +34,42 @@ func GetEnvAsserted(envVarName string) string {
 		log.Fatal(envVarName, " was not found in the current environment")
 	}
 	return thisEnvVar
+}
+
+func sendData(data []byte) {
+	egress_Urls := strings.Split(GetEnvAsserted("EGRESS_URLS"), ",")
+	for _, egress_Url := range egress_Urls {
+		fmt.Println("start client")
+		// Create a HTTP post request
+		r, err := http.NewRequest("POST", egress_Url, bytes.NewBuffer(data))
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		r.Header.Add("Content-Type", "application/json")
+
+		client := &http.Client{}
+		res, err := client.Do(r)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		defer res.Body.Close()
+
+		post := &Data{}
+		derr := json.NewDecoder(res.Body).Decode(post)
+		if derr != nil {
+			fmt.Println(err)
+		}
+
+		if res.StatusCode != http.StatusOK {
+			fmt.Println(err)
+			continue
+		}
+		fmt.Println("sent")
+	}
 }
 
 func Decrypt(iv, ct []byte) ([]byte, error) {
@@ -62,7 +96,7 @@ func Decrypt(iv, ct []byte) ([]byte, error) {
 	return result, nil
 }
 
-func handleConnection(conn net.Conn, egressUrl string) {
+func handleConnection(conn net.Conn) {
 	dec := gob.NewDecoder(conn)
 	msg := Data{}
 	dec.Decode(&msg)
@@ -87,58 +121,12 @@ func handleConnection(conn net.Conn, egressUrl string) {
 	fmt.Printf("+ %s\n", d)
 	conn.Close()
 
-	sendData(d, egressUrl)
+	sendData(d)
 }
 
-func sendData(data []byte, egressUrl string) {
-	fmt.Println("start client")
-	// Create a HTTP post request
-	r, err := http.NewRequest("POST", egressUrl, bytes.NewBuffer(data))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	r.Header.Add("Content-Type", "application/json")
-
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	defer res.Body.Close()
-
-	post := &Data{}
-	derr := json.NewDecoder(res.Body).Decode(post)
-	if derr != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if res.StatusCode != http.StatusCreated {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("sent status: " + r.Response.Status)
-}
-
-func main() {
-	godotenv.Load("./docker/docker.env") // TODO: Only use it for testing locally
-	module_name := GetEnvAsserted("MODULE_NAME")
-	ingress_host := GetEnvAsserted("INGRESS_HOST")
-	ingress_port := GetEnvAsserted("INGRESS_PORT")
-	egess_urls := GetEnvAsserted("EGRESS_URLS")
-	input_labels := GetEnvAsserted("INPUT_LABELS")
-
-	log.Info("keys to decrypt: %s", input_labels)
-	log.Info("%s running on %s at port %s with end-point set to %s", module_name, ingress_host, ingress_port, egess_urls)
-
-	inputLabels = strings.Split(input_labels, ",")
-
+func startServer() {
 	fmt.Println("start the server")
-	ln, err := net.Listen("tcp", ingress_host+":"+ingress_port)
+	ln, err := net.Listen("tcp", GetEnvAsserted("INGRESS_HOST")+":"+GetEnvAsserted("INGRESS_PORT"))
 	fmt.Println("started the server: " + ln.Addr().String())
 	if err != nil {
 		log.Fatal(err)
@@ -150,6 +138,13 @@ func main() {
 			log.Error(err)
 			continue
 		}
-		go handleConnection(conn, egess_urls) // a goroutine handles conn so that the loop can accept other connections
+		go handleConnection(conn) // a goroutine handles conn so that the loop can accept other connections
 	}
+}
+
+func main() {
+	godotenv.Load("./docker/docker.env") // TODO: Only use it for testing locally
+	log.Info("%s running on %s at port %s with end-point set to %s for data %s", GetEnvAsserted("MODULE_NAME"), GetEnvAsserted("INGRESS_HOST"), GetEnvAsserted("INGRESS_PORT"), GetEnvAsserted("EGRESS_URLS"), GetEnvAsserted("INPUT_LABELS"))
+
+	startServer()
 }
