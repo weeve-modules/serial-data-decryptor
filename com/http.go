@@ -3,7 +3,6 @@ package com
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -16,14 +15,14 @@ import (
 )
 
 func StartServer() {
-	fmt.Println("Starting the server")
+	log.Info("Starting the server")
 
 	ln, err := net.Listen("tcp", utility.GetEnvAsserted("INGRESS_HOST")+":"+utility.GetEnvAsserted("INGRESS_PORT"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Started the server: " + ln.Addr().String())
+	log.Infof("Started the server: %s", ln.Addr().String())
 
 	for {
 		conn, err := ln.Accept() // this blocks until connection or error
@@ -38,12 +37,21 @@ func StartServer() {
 func handleMessages(conn net.Conn) {
 	dec := gob.NewDecoder(conn)
 	msg := models.Data{}
-	dec.Decode(&msg)
-	fmt.Printf("Received message: %+v\n", msg)
+	err := dec.Decode(&msg)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	if msg != nil {
+		log.Error("Received message is nil")
+		return
+	}
+	log.Infof("Received message: %+v\n", msg)
 
 	data, err := processor.Process(msg)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return
 	}
 	conn.Close()
@@ -53,38 +61,38 @@ func handleMessages(conn net.Conn) {
 }
 
 func sendData(data []byte) {
-	egress_Urls := strings.Split(utility.GetEnvAsserted("EGRESS_URLS"), ",")
-	for _, egress_Url := range egress_Urls {
-		fmt.Printf("Sending to: %s\n", egress_Url)
+	egressUrls := strings.Split(strings.Replace(utility.GetEnvAsserted("EGRESS_URLS"), " ", "", -1), ",")
+	for _, egressUrl := range egressUrls {
+		log.Infof("Sending to: %s\n", egressUrl)
 
-		r, err := http.NewRequest("POST", egress_Url, bytes.NewBuffer(data))
+		r, err := http.NewRequest("POST", egressUrl, bytes.NewBuffer(data))
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 			continue
 		}
 
 		r.Header.Add("Content-Type", "application/json")
 
-		client := &http.Client{}
+		client := http.Client{}
 		res, err := client.Do(r)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 			continue
 		}
 
 		defer res.Body.Close()
 
 		if res.StatusCode != http.StatusOK {
-			fmt.Printf("Sending failed with status code: %d\n", res.StatusCode)
+			log.Errorf("Sending failed with status code: %d\n", res.StatusCode)
 			continue
 		}
 
 		rBody, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 			continue
 		}
 
-		fmt.Printf("Sent message response: %s\n", rBody)
+		log.Infof("Sent message response: %s\n", rBody)
 	}
 }
