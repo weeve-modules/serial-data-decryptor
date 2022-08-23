@@ -18,8 +18,6 @@ func (f *PlainFormatter) Format(entry *log.Entry) ([]byte, error) {
 	return []byte(fmt.Sprintf("%s %s : %s\n", timestamp, entry.Level, entry.Message)), nil
 }
 
-// The init function in the main package is called before anything else
-// Setup the logging here
 func init() {
 	const dateTimeFormat = "2006-01-02 15:04:05"
 
