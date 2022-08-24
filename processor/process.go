@@ -23,14 +23,15 @@ func Process(msg models.Data) ([]byte, error) {
 
 func validateData(msg models.Data) error {
 	var errorList []string
-	data := msg["data"]
-	if data == nil || (strings.TrimSpace(data.(string)) == "") {
-		errorList = append(errorList, "data is empty/nil")
-	}
 
 	iv := msg["iv"]
 	if iv == nil || (strings.TrimSpace(iv.(string)) == "") {
 		errorList = append(errorList, "iv is empty/nil")
+	}
+
+	data := msg["cyphertext"]
+	if data == nil || (strings.TrimSpace(data.(string)) == "") {
+		errorList = append(errorList, "cyphertext is empty/nil")
 	}
 
 	if len(errorList) > 0 {
@@ -43,11 +44,11 @@ func validateData(msg models.Data) error {
 func decrypt(msg models.Data) ([]byte, error) {
 	var key = []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
 
-	iv, err := base64.StdEncoding.DecodeString(fmt.Sprint(msg["data"]))
+	iv, err := base64.StdEncoding.DecodeString(fmt.Sprint(msg["iv"]))
 	if err != nil {
 		return nil, err
 	}
-	ct, err := base64.StdEncoding.DecodeString(fmt.Sprint(msg["iv"]))
+	ct, err := base64.StdEncoding.DecodeString(fmt.Sprint(msg["cyphertext"]))
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +61,10 @@ func decrypt(msg models.Data) ([]byte, error) {
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(iv) != aesgcm.NonceSize() {
+		return nil, fmt.Errorf("crypto/cipher: incorrect nonce length given to GCM")
 	}
 
 	result, err := aesgcm.Open(nil, iv, ct, nil)
