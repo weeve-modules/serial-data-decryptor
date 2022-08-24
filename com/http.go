@@ -38,6 +38,7 @@ func handleMessages(conn net.Conn) {
 	dec := gob.NewDecoder(conn)
 	msg := models.Data{}
 	err := dec.Decode(&msg)
+	conn.Close()
 	if err != nil {
 		log.Error(err)
 		return
@@ -54,7 +55,6 @@ func handleMessages(conn net.Conn) {
 		log.Error(err)
 		return
 	}
-	conn.Close()
 
 	//send processed data to egress endpoints
 	sendData(data)
