@@ -43,7 +43,7 @@ func handleMessages(conn net.Conn) {
 		return
 	}
 
-	if msg != nil {
+	if msg == nil {
 		log.Error("Received message is nil")
 		return
 	}
