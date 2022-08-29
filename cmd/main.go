@@ -5,7 +5,6 @@ import (
 	"serial-data-decryptor/com"
 	"serial-data-decryptor/utility"
 
-	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,11 +26,6 @@ func init() {
 }
 
 func main() {
-	err := godotenv.Load("../docker/docker.env") // TODO: Only use it for testing locally
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	log.Infof("%s running on %s at port %s with end-point set to %s",
 		utility.GetEnvAsserted("MODULE_NAME"),
 		utility.GetEnvAsserted("INGRESS_HOST"),
