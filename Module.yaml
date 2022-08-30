@@ -1,0 +1,26 @@
+displayName: 'Data Decryptor'       # Display name for the module that will be displayed in the UI.
+moduleName: 'data-decryptor'        # Module name that will be used to reference the module, and uniquely identify the module and their versions.
+description: 'This module decrypts encrypted data'       # Module description that will be displayed in the UI.
+versionName: 'v1.0.0'                    # Module version name that will be used to reference the module version, and uniquely identify the module version with a common name.
+isPublic: true                          # Boolean value that indicates if the module is Public or Private.
+categories:                             # Array of category that will be used to group the module in the UI.
+  - 'CATEGORY_1'
+  - 'CATEGORY_2'
+type: 'Input'      # Module type (Input, Processing, Output) that will be used to group the module in the UI.
+image:
+  name: 'weevenetwork/data-decrypter'     # Image name from the docker registry.
+  tag: '1.0.0'                               # Image tag from the docker registry.
+  homepage: 'https://hub.docker.com/weevenetwork/data-decryptor'      # Image homepage from the docker registry.
+repository: 'https://github.com/weeve-modules/serial-data-decryptor'     # Repository URL to source code.
+envs:                                   # Array of environment variables that will be used to configure the module. Also used to show related fields on the UI.
+  - name: DecryptionKey                   # name of the field to be displayed on the UI.
+    key: KEY
+    description: AES key to decrypt data # Description/helper text for the field.
+    value: ''                         # Value to be set in the environment variables.
+    type: 'text'                    # Type of the field. Possible values are: ['text', 'select', 'boolean', 'date', 'time', 'dateTime-local', 'number', 'multiple', 'CSV', 'file']
+tags:                                   # Array of tags.
+  - 'Golang'
+  - 'Processing'
+  - 'Decrypt'
+  - 'Serial-Data'
+icon: 'https://some.url/to/icon.png'    # Icon URL that will be displayed in the UI.

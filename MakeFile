@@ -1,0 +1,84 @@
+# import app config
+# You can change the default app config with `make cnf="app.env" release`
+dpl ?= app.env
+include $(dpl)
+export $(shell sed 's/=.*//' $(dpl))
+
+# # grep the version from the mix file
+# VERSION=$(shell ./version.sh)
+
+# HELP
+# This will output the help for each task
+# thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+.PHONY: help
+
+help: ## This help.
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+.DEFAULT_GOAL := help
+
+
+# DOCKER TASKS
+# Build the container
+build: ## Build the container
+	docker build -t $(ACCOUNT_NAME)/$(APP_NAME) . -f docker/Dockerfile
+
+build-nc: ## Build the container without caching
+	docker build --no-cache -t $(ACCOUNT_NAME)/$(APP_NAME) . -f docker/Dockerfile
+
+build-debug: ## Build the container without caching
+	docker build --no-cache -t $(ACCOUNT_NAME)/$(APP_NAME) . -f docker/Dockerfile
+
+run: ## Run container on port configured in `config.env`
+	docker run -i -t --rm \
+		--env-file=./config.env \
+		--name="$(APP_NAME)" \
+		-e EGRESS_URLS=localhost \
+		$(ACCOUNT_NAME)/$(APP_NAME)
+
+listen: ## Pull and start a listener
+	docker run \
+		--detach \
+		-e PORT=$(PORT) \
+		-e LOG_HTTP_BODY \
+		-e LOG_HTTP_HEADERS \
+		-p $(PORT):$(PORT) \
+		jmalloc/echo-server
+
+up: build run ## Run container on port configured in `config.env` (Alias to run)
+
+# check:
+# 	docker pushrm2 --version
+# ifeq (, $(shell which docker pushrm))
+# $(error "No lzop in $(PATH), consider doing apt-get install lzop")
+# endif
+
+listentest: ## Run a listener container and receive messages from this container
+# The - symbol instructs make to ignore a non-zero exit
+	-docker stop echo
+	docker network create $(NETWORK_NAME) || true
+	docker run --detach --network=$(NETWORK_NAME) --rm \
+		-e PORT=4000 \
+		-e LOG_HTTP_BODY=true \
+		-e LOG_HTTP_HEADERS=true \
+		--name echo jmalloc/echo-server
+	docker run \
+		--network=$(NETWORK_NAME) --rm \
+		--name="$(APP_NAME)" \
+		-e EGRESS_URLS=echo:4000 \
+		-e MODULE_NAME=$(MODULE_NAME) \
+		-e MODULE_TYPE=$(MODULE_TYPE) \
+		--env-file ./config.env \
+		$(ACCOUNT_NAME)/$(APP_NAME)
+
+push: ## Push to dockerhub, needs credentials!
+	docker push $(ACCOUNT_NAME)/$(APP_NAME):latest
+
+clean:
+	docker container stop echo $(APP_NAME)
+	docker container rm echo $(APP_NAME)
+
+pushrm: ## Push to dockerhub AND add description, needs additionally the pushrm tool!
+## https://github.com/christian-korneck/docker-pushrm
+	docker push $(ACCOUNT_NAME)/$(APP_NAME):latest
+	docker pushrm $(ACCOUNT_NAME)/$(APP_NAME):latest --short $(DESCRIPTION)
