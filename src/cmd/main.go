@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"serial-data-decryptor/src/com"
-	"serial-data-decryptor/src/utility"
+	"serial-data-decryptor/com"
+	"serial-data-decryptor/utility"
 
 	log "github.com/sirupsen/logrus"
 )

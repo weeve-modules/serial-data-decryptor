@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"serial-data-decryptor/src/models"
+	"serial-data-decryptor/models"
 
 	"strings"
 
