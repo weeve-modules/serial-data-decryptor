@@ -6,7 +6,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"serial-data-decryptor/models"
+	"serial-data-decryptor/src/models"
+
 	"strings"
 
 	log "github.com/sirupsen/logrus"

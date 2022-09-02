@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"serial-data-decryptor/models"
-	"serial-data-decryptor/processor"
-	"serial-data-decryptor/utility"
+	"serial-data-decryptor/src/models"
+	"serial-data-decryptor/src/processor"
+	"serial-data-decryptor/src/utility"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
