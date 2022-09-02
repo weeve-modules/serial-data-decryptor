@@ -10,6 +10,6 @@ FROM alpine:edge
 RUN apk add --no-cache bash
 SHELL ["/bin/bash", "-c"]
 COPY --from=builder /app/app ./
-COPY ./docker/entrypoint.sh /entrypoint.sh
+COPY ./docker/docker-entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
