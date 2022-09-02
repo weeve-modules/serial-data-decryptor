@@ -11,15 +11,9 @@ image:
   tag: '1.0.0'                               # Image tag from the docker registry.
   homepage: 'https://hub.docker.com/r/weevenetwork/serial-data-decryptor'      # Image homepage from the docker registry.
 repository: 'https://github.com/weeve-modules/serial-data-decryptor'     # Repository URL to source code.
-# envs:                                   # Array of environment variables that will be used to configure the module. Also used to show related fields on the UI.
-#   - name: DecryptionKey                   # name of the field to be displayed on the UI.
-#     key: KEY
-#     description: AES key to decrypt data # Description/helper text for the field.
-#     value: ''                         # Value to be set in the environment variables.
-#     type: 'text'                    # Type of the field. Possible values are: ['text', 'select', 'boolean', 'date', 'time', 'dateTime-local', 'number', 'multiple', 'CSV', 'file']
 tags:                                   # Array of tags.
   - 'Golang'
   - 'Processing'
   - 'Decrypt'
   - 'Serial-Data'
-icon: 'https://some.url/to/icon.png'    # Icon URL that will be displayed in the UI.
+icon: 'https://icons-020-demo.s3.eu-central-1.amazonaws.com/mi_serial-data-decrypter_process.png'    # Icon URL that will be displayed in the UI.
