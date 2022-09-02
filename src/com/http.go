@@ -2,9 +2,9 @@ package com
 
 import (
 	"bytes"
-	"encoding/gob"
+	"encoding/json"
+	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"serial-data-decryptor/models"
 	"serial-data-decryptor/processor"
@@ -17,47 +17,38 @@ import (
 func StartServer() {
 	log.Info("Starting the server")
 
-	ln, err := net.Listen("tcp", utility.GetEnvAsserted("INGRESS_HOST")+":"+utility.GetEnvAsserted("INGRESS_PORT"))
-	if err != nil {
-		log.Fatal(err)
-	}
+	addr := utility.GetEnvAsserted("INGRESS_HOST") + ":" + utility.GetEnvAsserted("INGRESS_PORT")
 
-	log.Infof("Started the server: %s", ln.Addr().String())
+	http.HandleFunc("/", handleMessages)
 
-	for {
-		conn, err := ln.Accept() // this blocks until connection or error
-		if err != nil {
-			log.Error(err)
-			continue
-		}
-		go handleMessages(conn) // a goroutine handles conn so that the loop can accept other connections
-	}
+	log.Fatal(http.ListenAndServe(addr, nil))
+
+	log.Info("Started the server on ", addr)
 }
 
-func handleMessages(conn net.Conn) {
-	dec := gob.NewDecoder(conn)
-	msg := models.Data{}
-	err := dec.Decode(&msg)
-	conn.Close()
+func handleMessages(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	if msg == nil {
-		log.Error("Received message is nil")
-		return
-	}
-	log.Infof("Received message: %+v\n", msg)
+	log.Info("Received message: ", string(body))
 
-	data, err := processor.Process(msg)
+	var data models.Data
+
+	json.Unmarshal(body, &data)
+
+	resp, err := processor.Process(data)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
 	//send processed data to egress endpoints
-	sendData(data)
+	sendData(resp)
 }
 
 func sendData(data []byte) {

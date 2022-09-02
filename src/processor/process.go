@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"serial-data-decryptor/models"
+	"serial-data-decryptor/utility"
 
 	"strings"
 
@@ -25,36 +26,41 @@ func Process(msg models.Data) ([]byte, error) {
 func validateData(msg models.Data) error {
 	var errorList []string
 
-	iv := msg["iv"]
-	if iv == nil || (strings.TrimSpace(iv.(string)) == "") {
+	if strings.TrimSpace(msg.IV) == "" {
 		errorList = append(errorList, "iv is empty/nil")
 	}
 
-	data := msg["cyphertext"]
-	if data == nil || (strings.TrimSpace(data.(string)) == "") {
+	if strings.TrimSpace(msg.Cyphertext) == "" {
 		errorList = append(errorList, "cyphertext is empty/nil")
 	}
 
 	if len(errorList) > 0 {
-		return errors.New(strings.Join(errorList[:], ","))
+		return errors.New(strings.Join(errorList, "; "))
 	} else {
 		return nil
 	}
 }
 
 func decrypt(msg models.Data) ([]byte, error) {
-	var key = []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
-	// log.Infof("AES key %s", utility.GetEnvAsserted("AES_KEY"))
-	// var key = []byte(utility.GetEnvAsserted("AES_KEY"))
+	log.Debug("Decrypting...")
 
-	iv, err := base64.StdEncoding.DecodeString(fmt.Sprint(msg["iv"]))
+	key, err := base64.StdEncoding.DecodeString(utility.GetEnvAsserted("AES_KEY"))
 	if err != nil {
 		return nil, err
 	}
-	ct, err := base64.StdEncoding.DecodeString(fmt.Sprint(msg["cyphertext"]))
+	log.Debug("key = ", string(key))
+
+	iv, err := base64.StdEncoding.DecodeString(msg.IV)
 	if err != nil {
 		return nil, err
 	}
+	log.Debug("iv = ", string(iv))
+
+	ct, err := base64.StdEncoding.DecodeString(msg.Cyphertext)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug("cypthertext = ", string(ct))
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
