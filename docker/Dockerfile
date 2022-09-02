@@ -1,6 +1,8 @@
 FROM golang:1.18.4-alpine3.16 AS builder
 WORKDIR /app
 COPY ./src .
+COPY go.mod .
+COPY go.sum .
 RUN go mod download
 RUN unset GOPATH && go build -o app ./cmd/main.go
 
