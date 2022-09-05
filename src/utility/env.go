@@ -6,9 +6,9 @@ import (
 )
 
 func GetEnvAsserted(envVarName string) string {
-	var thisEnvVar = os.Getenv(envVarName)
-	if len(thisEnvVar) == 0 {
+	val, ok := os.LookupEnv(envVarName)
+	if !ok {
 		log.Fatal(envVarName, " was not found in the current environment")
 	}
-	return thisEnvVar
+	return val
 }

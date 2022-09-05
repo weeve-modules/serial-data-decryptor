@@ -23,14 +23,11 @@ func init() {
 	plainFormatter := new(PlainFormatter)
 	plainFormatter.TimestampFormat = dateTimeFormat
 	log.SetFormatter(plainFormatter)
+	l, _ := log.ParseLevel(utility.GetEnvAsserted("LOG_LEVEL"))
+	log.SetLevel(l)
 }
 
 func main() {
-	// err := godotenv.Load("./app.env") // TODO: Only use it for testing locally
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	log.Infof("%s running on %s at port %s with end-point set to %s",
 		utility.GetEnvAsserted("MODULE_NAME"),
 		utility.GetEnvAsserted("INGRESS_HOST"),
