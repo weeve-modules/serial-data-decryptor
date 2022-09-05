@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"serial-data-decryptor/models"
 	"serial-data-decryptor/processor"
@@ -78,7 +77,7 @@ func sendData(data []byte) {
 			continue
 		}
 
-		rBody, err := ioutil.ReadAll(res.Body)
+		rBody, err := io.ReadAll(res.Body)
 		if err != nil {
 			log.Error(err)
 			continue
