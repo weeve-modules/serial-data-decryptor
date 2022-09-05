@@ -39,6 +39,10 @@ func handleMessages(w http.ResponseWriter, r *http.Request) {
 	var data models.Data
 
 	json.Unmarshal(body, &data)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 
 	resp, err := processor.Process(data)
 	if err != nil {

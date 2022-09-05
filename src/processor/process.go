@@ -4,41 +4,29 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"serial-data-decryptor/models"
 	"serial-data-decryptor/utility"
 
-	"strings"
-
+	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10/non-standard/validators"
 	log "github.com/sirupsen/logrus"
 )
 
+var validate *validator.Validate
+
+func init() {
+	validate = validator.New()
+	validate.RegisterValidation("notblank", validators.NotBlank)
+}
+
 func Process(msg models.Data) ([]byte, error) {
-	err := validateData(msg)
+	err := validate.Struct(msg)
 	if err != nil {
 		return nil, err
 	}
 
 	return decrypt(msg)
-}
-
-func validateData(msg models.Data) error {
-	var errorList []string
-
-	if strings.TrimSpace(msg.IV) == "" {
-		errorList = append(errorList, "iv is empty/nil")
-	}
-
-	if strings.TrimSpace(msg.Cyphertext) == "" {
-		errorList = append(errorList, "cyphertext is empty/nil")
-	}
-
-	if len(errorList) > 0 {
-		return errors.New(strings.Join(errorList, "; "))
-	} else {
-		return nil
-	}
 }
 
 func decrypt(msg models.Data) ([]byte, error) {
