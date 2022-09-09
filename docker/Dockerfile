@@ -6,9 +6,6 @@ RUN unset GOPATH && go build -o app ./cmd/main.go
 
 ###
 FROM alpine:edge
-# Oh yes, you need bash!
-RUN apk add --no-cache bash
-SHELL ["/bin/bash", "-c"]
 COPY --from=builder /app/app ./
 COPY ./docker/docker-entrypoint.sh /entrypoint.sh
 

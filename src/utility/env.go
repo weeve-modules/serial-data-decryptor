@@ -5,10 +5,10 @@ import (
 	"os"
 )
 
-func GetEnvAsserted(envVarName string) string {
-	val, ok := os.LookupEnv(envVarName)
+func GetEnvAsserted(key string) string {
+	val, ok := os.LookupEnv(key)
 	if !ok {
-		log.Fatal(envVarName, " was not found in the current environment")
+		log.Fatal(key, " was not found in the current environment")
 	}
 	return val
 }

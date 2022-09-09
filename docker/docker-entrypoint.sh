@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 # More safety, by turning some bugs into errors.
 # Without `errexit` you don’t need ! and can replace
 # PIPESTATUS with a simple $?, but I don’t do that.
-set -o errexit -o pipefail -o noclobber -o nounset
+set -o errexit -o noclobber -o nounset
 
 echo "[ENTRYPOINT] Entrypoint script for the module."
 
@@ -10,15 +10,15 @@ echo "[ENTRYPOINT] Entrypoint script for the module."
 : "${MODULE_TYPE:?Need to set MODULE_TYPE environment variable to string (Input, Processing, Output)}"
 
 # Validate the environment according to module type
-if [[ "$MODULE_TYPE" == "Input" ]]
+if [ "$MODULE_TYPE" = "Input" ]
 then
     : "${EGRESS_URLS:?Need to set EGRESS_URLS environment variable to string}"
-elif [[ "$MODULE_TYPE" == "Processing" ]]
+elif [ "$MODULE_TYPE" = "Processing" ]
 then
     : "${INGRESS_HOST:?Need to set INGRESS_HOST environment variable to string}"
     : "${INGRESS_PORT:?Need to set INGRESS_PORT environment variable to string}"
     : "${EGRESS_URLS:?Need to set EGRESS_URLS environment variable to string}"
-elif [[ "$MODULE_TYPE" == "Output" ]]
+elif [ "$MODULE_TYPE" = "Output" ]
 then
     : "${INGRESS_HOST:?Need to set INGRESS_HOST environment variable to string}"
     : "${INGRESS_PORT:?Need to set INGRESS_PORT environment variable to string}"
