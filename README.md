@@ -1,15 +1,59 @@
-# serial-data-decryptor
+# Serial Data Decryptor
+
+|              |                                                                  |
+| ------------ | ---------------------------------------------------------------- |
+| name         | Serial Data Decryptor                                            |
+| version      | v1.0.0                                                           |
+| GitHub       | [serial-data-decryptor](https://github.com/weeve-modules/serial-data-decryptor) |
+| DockerHub    | [weevenetwork/serial-data-decryptor](https://hub.docker.com/r/weevenetwork/serial-data-decryptor)     |
+| authors      | Shrikant Bhusalwad, Paul Gaiduk, Vadim Vygonets                  |
+
+***
+## Table of Content
+
+- [Serial Data Decryptor](#serial-data-decryptor)
+  - [Table of Content](#table-of-content)
+  - [Description](#description)
+  - [Module Variables](#module-variables)
+  - [Module Testing](#module-testing)
+  - [Dependencies](#dependencies)
+  - [Input](#input)
+  - [Output](#output)
+***
+
+## Description
+
 Weeve module to receive serial data in JSON format by Ingress module and decrypt the value, then send the decrypted data to next moudle.
 
-Expected data schema
-```go
-{
-	IV         string `json:"iv"` # Initialization Vector
-	CypherText string `json:"cyphertext"` # Cypher Text
-}
-```
+## Module Variables
 
-Sample encrypted data (Ingress)
+The following module configurations can be provided in a data service designer section on weeve platform:
+
+| Environment Variables | type   | Description                                       |
+| --------------------- | ------ | ------------------------------------------------- |
+| MODULE_NAME           | string | Name of the module                                |
+| MODULE_TYPE           | string | Type of the module (Input, Processing, Output)    |
+| LOG_LEVEL             | string | Allowed log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL. Refer to `logging` package documentation. |
+| INGRESS_HOST          | string | Host to which data will be received               |
+| INGRESS_PORT          | string | Port to which data will be received               |
+| EGRESS_URLS           | string | HTTP ReST endpoint for the next module            |
+| AES_KEY               | string | AES key to decrypt cyphertext in base64 format    |
+
+## Module Testing
+
+TBD
+
+## Dependencies
+
+The following are module dependencies:
+
+* github.com/sirupsen/logrus
+* github.com/go-playground/validator/v10
+
+## Input
+
+Input to this module is JSON body single object:
+
 ```json
 {
     "iv": "jc/GHiyMZmDkj1FK",
@@ -17,7 +61,9 @@ Sample encrypted data (Ingress)
 }
 ```
 
-Sample decryped data (Egress)
+## Output
+
+Output of this module is the original plaintext. In this case this is the decrypted plaintext of the cyphertext from above:
 ```text
 cyccnt 0059d6ac (+0007eb06), ocnt 0002ffcd, ent +038d, oh 378782µ
 ```
