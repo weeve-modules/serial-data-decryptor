@@ -1,22 +1,12 @@
-FROM golang:1.18.1
-
-# Set destination for COPY
+FROM golang:1.18.4-alpine3.16 AS builder
 WORKDIR /app
-
-# Download Go modules
-COPY go.mod .
-COPY go.sum .
+COPY ./src .
 RUN go mod download
+RUN unset GOPATH && go build -o app ./cmd/main.go
 
-# Copy the source code. Note the slash at the end, as explained in
-# https://docs.docker.com/engine/reference/builder/#copy
-COPY *.go ./
-COPY docker.env ./
+###
+FROM alpine:edge
+COPY --from=builder /app/app ./
+COPY ./docker/docker-entrypoint.sh /entrypoint.sh
 
-# Build
-RUN go build -o /serial-data-decrypter
-
-# This is for documentation purposes only.
-# To actually open the port, runtime parameters
-# must be supplied to the docker command.
-EXPOSE 80
+ENTRYPOINT ["/entrypoint.sh"]
