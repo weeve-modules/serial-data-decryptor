@@ -1,4 +1,4 @@
-# Comparison Filter
+# Serial Data Decryptor
 
 |              |                                                                  |
 | ------------ | ---------------------------------------------------------------- |
@@ -11,7 +11,7 @@
 ***
 ## Table of Content
 
-- [Comparison Filter](#comparison-filter)
+- [Serial Data Decryptor](#serial-data-decryptor)
   - [Table of Content](#table-of-content)
   - [Description](#description)
   - [Module Variables](#module-variables)
