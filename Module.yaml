@@ -1,14 +1,14 @@
-displayName: 'Serial Data Decryptor'       # Display name for the module that will be displayed in the UI.
+displayName: 'AES-GCM Decryptor'       # Display name for the module that will be displayed in the UI.
 moduleName: 'serial-data-decryptor'        # Module name that will be used to reference the module, and uniquely identify the module and their versions.
-description: 'This module decrypts encrypted data'       # Module description that will be displayed in the UI.
-versionName: 'v1.0.0'                    # Module version name that will be used to reference the module version, and uniquely identify the module version with a common name.
+description: 'This module decrypts data encrypted with AES-GCM'       # Module description that will be displayed in the UI.
+versionName: 'v2.0.0'                    # Module version name that will be used to reference the module version, and uniquely identify the module version with a common name.
 isPublic: true                          # Boolean value that indicates if the module is Public or Private.
 categories:                             # Array of category that will be used to group the module in the UI.
   - 'Decryption'
 type: 'Processing'      # Module type (Input, Processing, Output) that will be used to group the module in the UI.
 image:
   name: 'weevenetwork/serial-data-decryptor'     # Image name from the docker registry.
-  tag: 'v1.0.0'                               # Image tag from the docker registry.
+  tag: 'v2.0.0'                               # Image tag from the docker registry.
   homepage: 'https://hub.docker.com/r/weevenetwork/serial-data-decryptor'      # Image homepage from the docker registry.
 repository: 'https://github.com/weeve-modules/serial-data-decryptor'     # Repository URL to source code.
 envs:                                   # Array of environment variables that will be used to configure the module. Also used to show related fields on the UI.
