@@ -1,5 +1,5 @@
 MODULE=weevenetwork/serial-data-decryptor
-VERSION_NAME=v1.0.0
+VERSION_NAME=v2.0.0
 
 create_image:
 	docker build -t ${MODULE}:${VERSION_NAME} . -f docker/Dockerfile

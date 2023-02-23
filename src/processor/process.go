@@ -36,7 +36,6 @@ func decrypt(msg models.Data) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Debug("key = ", string(key))
 
 	iv, err := base64.StdEncoding.DecodeString(msg.IV)
 	if err != nil {

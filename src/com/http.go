@@ -44,16 +44,26 @@ func handleMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := processor.Process(data)
+	plaintext, err := processor.Process(data)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	//send processed data to egress endpoints
-	sendData(resp)
+	resp := models.Response{
+		Plaintext: string(plaintext),
+	}
+
+	respJson, err := json.Marshal(resp)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	sendData(respJson)
 }
 
+// send processed data to egress endpoints
 func sendData(data []byte) {
 	egressUrls := strings.Split(strings.Replace(utility.GetEnvAsserted("EGRESS_URLS"), " ", "", -1), ",")
 	for _, egressUrl := range egressUrls {
